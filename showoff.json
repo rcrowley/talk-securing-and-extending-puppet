@@ -1,10 +1,6 @@
 {
 	"name": "Securing and Extending Puppet for World Domination",
 	"sections": [
-		{"section": "intro"},
-		{"section": "basics"},
-		{"section": "security"},
-		{"section": "extensions"},
-		{"section": "outro"}
+		{"section": "."}
 	]
 }

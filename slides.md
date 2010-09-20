@@ -1,10 +1,14 @@
-# `intro`
+# _intro_
 
 ## Securing and Extending Puppet for World Domination
 
 ## Hi, I'm Richard Crowley
 
-# `basics`
+* Equal opportunity technology hater
+* DevStructure's operator and UNIX hacker
+* TODO
+
+# _basics_
 
 ## Configuration management Cliff's Notes
 
@@ -13,6 +17,9 @@
 ## Declare state, not process
 
 ## Puppet, Chef, and `~/bin/doit5`
+
+* Limits are good.  (It's a good thing that the Puppet language is not itself Ruby but I'm not here to start a holy war.)
+* Puppet and Chef are idempotent by default.
 
 ## Architecture
 
@@ -39,7 +46,7 @@
 * What the fuck did I mean by this?
 * HA?
 
-# `security`
+# _security_
 
 ## Security
 
@@ -72,7 +79,7 @@
 * If it's on the public Internet, it's either public or encrypted.
 * Use `stunnel`(8) over (for example) MySQL's builtin SSL because it's persistent.
 
-# `external_nodes`
+# _external_nodes_
 
 ## External node classifier
 
@@ -91,7 +98,7 @@
 * Classes, variables.  No resources.
 * YAML.
 
-# `plugins`
+# _plugins_
 
 ## Puppet plugins
 
@@ -121,7 +128,7 @@
 
 * That's an exercise for the reader.
 
-# `outro`
+# _outro_
 
 ## Pragmatic cloudiness
 
