@@ -23,6 +23,7 @@
 
 # Infrastructure as code
 
+* Reason about it.
 * TODO
 
 
@@ -32,6 +33,8 @@
 
 # Declare state,<br />not process
 
+* More precise.  Less verbose.
+* Processes have starting states.
 * TODO
 
 
@@ -308,7 +311,7 @@
 
 # How to lie to Puppet
 
-## Maybe they&#8217;re `autosign`ing?
+* Maybe they&#8217;re `autosign`ing?
 
 
 
@@ -316,7 +319,7 @@
 
 # How to lie to Puppet
 
-## Sneak through regex `node` definitions
+## Sneak through regex `node` definitions.
 
 	[agent]
 		certname=foobarbaz.www.example.com
@@ -324,7 +327,6 @@
 
 
 !SLIDE bullets
-.notes TODO VERIFY
 
 # How to lie to Puppet
 
@@ -407,11 +409,25 @@
 
 
 
-!SLIDE bullets
+!SLIDE bullets small
 
 # `iptables`
 
-* TODO
+	iptables -P INPUT ACCEPT
+	iptables -P OUTPUT ACCEPT
+	iptables -P FORWARD ACCEPT
+
+	iptables -F
+
+	iptables -A INPUT -m conntrack \
+		--ctstate RELATED,ESTABLISHED -j ACCEPT
+
+	iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+	iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+
+	iptables -A INPUT -i lo -j ACCEPT
+
+	iptables -A INPUT -j DROP
 
 
 
@@ -425,11 +441,40 @@
 
 
 
+!SLIDE bullets small
+
+# `stunnel` Upstart config
+
+	description	"stunnel-redis-client"
+	start on runlevel [2345]
+	stop on runlevel [!2345]
+	respawn
+	exec /usr/bin/stunnel -f -c -d localhost:6379 \
+		-r redis.example.com:6381
+
+	description	"stunnel-redis-server"
+	start on runlevel [2345]
+	stop on runlevel [!2345]
+	respawn
+	exec /usr/bin/stunnel -f -d 6381 -r localhost:6382
+
+
+
 !SLIDE bullets
+.notes Hostname-specific file paths can mitigate this risk.  Leak example: malicious server grabbing the database config or secrets file.
 
-# TODO Templates
+# Use templates
 
-* TODO
+<pre>
+file { "/foo/bar/baz":
+	<del>source  => "puppet://foo/bar/baz",</del>
+	content => template("foo/bar/baz"),
+	ensure  => file,
+}
+</pre>
+
+* File and catalog serving use different ACLs.
+* Template content is included in the catalog so they inherit the catalog&#8217;s ACL.
 
 
 
@@ -437,8 +482,8 @@
 
 # Use only the `default` node
 
-* Removes advantages of `certname` speculation.
-* Use `--config`, `--manifestdir`, or `--manifest` to run different masters listening on different interfaces/ports.
+* Mitigate the consequences of<br />successful `certname` speculation.
+* Use `--config`, `--manifestdir`, or `--manifest` to run different masters listening<br />on different interfaces/ports.
 
 
 
@@ -458,7 +503,7 @@
 # Example task
 
 * Authorize an SSH key unique to each host.
-* By no means impossible in the Puppet language.
+* (This is by no means impossible in the Puppet language.)
 
 
 
@@ -498,7 +543,7 @@
 
 <pre>
 --- !ruby/object:Puppet::Node::Facts
-  expiration: 2010-09-20 20:27:14.445807 +00:00
+  expiration: 2010-09-20 20:27:14.445807
   name: &id003 hooah.example.com
   values:
     hardwaremodel: &id002 x86_64
@@ -649,19 +694,21 @@ EOF
 
 # Provider
 
-	require 'openssl'
-	require 'puppet/resource'
-	require 'puppet/resource/catalog'
+require 'openssl'
+require 'puppet/resource'
+require 'puppet/resource/catalog'
 
-	Puppet::Type.type(:keygen).
-	  provide(:posix) do
+<pre>
+Puppet::Type.type(:keygen).
+  provide(:posix) do
 
-	  desc "ssh-keygen example for POSIX"
-	  defaultfor :operatingsystem => :debian
+  desc "ssh-keygen example for POSIX"
+  defaultfor :operatingsystem => :debian
 
-	  # Define exists?, create, and destroy.
+  <strong># Define exists?, create, and destroy.</strong>
 
-	end
+end
+</pre>
 
 
 
@@ -680,11 +727,11 @@ EOF
 
 
 !SLIDE bullets
-.notes TODO See how useful the new-to-2.6 Ruby DSL is to use in this case.
 
 	  def create
 	    key = OpenSSL::PKey::RSA.generate(2048)
-	    zomg_post_to_the_api TODO hostname, key
+	    zomg_post_to_the_api \
+	      Facter.value(:ipaddress), key
 	    catalog = Puppet::Resource::Catalog.new
 	    catalog.create_resource(:file,
 	      :path => "/root/.ssh",
@@ -711,6 +758,134 @@ EOF
 
 !SLIDE bullets
 
+# Extending Puppet
+
+## (One more thing.)
+
+
+
+!SLIDE bullets
+
+# Rack middleware
+
+* Puppet master is Rack application.
+* Rack allows pre- and post- processing.
+
+
+
+!SLIDE bullets
+
+# `config.ru`
+
+<pre>
+$0 = "master"
+ARGV << "--rack"
+ARGV << "--certname=#{
+  File.read("/etc/puppet/certname").chomp}"
+
+require 'puppet/application/master'
+
+<strong># TODO Middleware.</strong>
+
+run Puppet::Application[:master].run
+</pre>
+
+
+
+!SLIDE bullets smaller
+
+# No-op middleware
+
+<pre>
+require 'base64'
+require 'json'
+require 'rack/utils'
+require 'yaml'
+require 'zlib'
+
+class Hooah
+
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+	<strong># TODO Preprocessing.</strong>
+    status, headers, body = @app.call(env)
+	<strong># TODO Postprocessing.</strong>
+    [status, headers, body]
+  end
+
+end
+
+use Hooah
+</pre>
+
+
+
+!SLIDE bullets smaller
+
+# Preprocessing
+
+<pre>
+    params = Rack::Utils.parse_query(env["QUERY_STRING"], "&")
+    facts = case params["facts_format"]
+    when "b64_zlib_yaml"
+      YAML.load(Zlib::Inflate.inflate(Base64.decode64(
+        Rack::Utils.unescape(params["facts"]))))
+    end
+
+    <strong># TODO Change facts.</strong>
+
+    params["facts"] = case params["facts_format"]
+    when "b64_zlib_yaml"
+      Rack::Utils.escape(Base64.encode64(Zlib::Deflate.deflate(
+        YAML.dump(facts), Zlib::BEST_COMPRESSION)))
+    end if facts
+    env["QUERY_STRING"] = Rack::Utils.build_query(params)
+    env["REQUEST_URI"] =
+      "#{env["PATH_INFO"]}?#{env["QUERY_STRING"]}"
+</pre>
+
+
+
+!SLIDE bullets smaller
+
+# Postprocessing
+
+<pre>
+    object = case headers["Content-Type"]
+    when /[\/-]pson$/ then JSON.parse(body.body.join)
+    when /[\/-]yaml$/ then YAML.load(body.body.join)
+    when "text/marshal" then Marshal.load(body.body.join)
+    else body.body.join
+    end
+
+    <strong># TODO Change catalog.</strong>
+
+    body = case headers["Content-Type"]
+    when /[\/-]pson$/ then [JSON.generate(object)]
+    when /[\/-]yaml$/ then [YAML.dump(object)]
+    when "text/marshal" then [Marshal.dump(object)]
+    else [object]
+    end
+	headers["Content-Length"] = Rack::Utils.bytesize(body.first)
+</pre>
+
+
+
+!SLIDE bullets
+.notes Mention this is a last resort and that I've fixed bugs in Puppet itself via this method.
+
+# Rack middleware
+
+* Drink responsibly.
+* TODO Gist
+
+
+
+!SLIDE bullets
+
 # Thank you
 
 * <richard@devstructure.com> or [@rcrowley](http://twitter.com/rcrowley)
@@ -729,14 +904,4 @@ EOF
 
 * Break things down into 80/20 rules.
 * Go back at the end and fix quotes to look pretty.
-* Link to blueprints for client and server.  Actually build them.
 * Note when Puppet and Chef are similar and that the only significant difference is in dependency resolution.
-* A great example plugin would be generating and authorizing an SSH key for `root` on each server.
-
-* What about fucking with the Puppet REST API via Rack middleware?  Oh yeah!
-* What about combining multiple app servers into one?
-
-# Orphaned sections
-
-* Agents run as `root`.  HERE BE DRAGONS.
-* (Not really.)
