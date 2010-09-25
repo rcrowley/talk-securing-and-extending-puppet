@@ -20,11 +20,11 @@
 
 
 !SLIDE bullets
+.notes Your infrastructure is never an immutable black box.  It is one step in a long iteration.
 
 # Infrastructure as code
 
-* Reason about it.
-* TODO
+* You can reason about code in ways you can&#8217;t about a tarball or AMI.
 
 
 
@@ -34,13 +34,12 @@
 # Declare state,<br />not process
 
 * More precise.  Less verbose.
-* Processes have starting states.
-* TODO
+* The state of a server is easier to unambiguously describe.
 
 
 
 !SLIDE bullets
-.notes It's a good thing that the Puppet language is not itself Ruby but I'm not here to start a holy war.
+.notes `~/bin/doit5` may never work again.  It's a good thing that the Puppet language is not itself Ruby but I'm not here to start a holy war.  Limits in configuration management serve the same purpose as in a templating language: they enforce separation of concerns.  In this case, the limits separate process from desired state.
 
 # Puppet, Chef,<br />and `~/bin/doit5`
 
@@ -50,6 +49,7 @@
 
 
 !SLIDE bullets
+.notes Puppet and Chef work basically the same way from this altitude.
 
 # Architecture
 
@@ -64,6 +64,7 @@
 !SLIDE bullets
 
 # Resources
+.notes Puppet and Chef again work the same way here.  The single difference is in the granularity of dependency declarations.  Puppet's are at the resource level.  Chef's are at the cookbook (module) level.
 
 ## The smallest unit of configuration.
 
@@ -234,7 +235,7 @@
 
 # SSL Cliff&#8217;s Notes
 
-* TODO
+* FIXME
 
 
 
@@ -404,8 +405,8 @@
 
 # Public and private interfaces
 
-* TODO
-* Security aside, use free bandwidth on private interfaces when you can.
+* FIXME
+* Aside: on at least AWS and Rackspace, bandwidth over private interfaces is free.
 
 
 
@@ -880,7 +881,7 @@ use Hooah
 # Rack middleware
 
 * Drink responsibly.
-* TODO Gist
+* FIXME Gist
 
 
 
