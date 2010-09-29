@@ -235,7 +235,25 @@
 
 # SSL Cliff&#8217;s Notes
 
-* FIXME
+
+
+!SLIDE bullets
+
+# SSL handshake
+
+* Server certificate authenticates<br />server to client.
+* Clients may verify a server&#8217;s certificate against trusted certificate authority.
+* Client and server compute matching<br />secret keys.
+
+
+
+!SLIDE bullets
+
+# Client certificates
+
+* Client certificate authenticates<br />client to server.
+* Not used by browsers.
+* Used by Puppet because you can&#8217;t lie here.
 
 
 
@@ -255,9 +273,9 @@
 
 	foo.example.com
 	*.bar.example.com
+	*
 
-* Wildcards are a bad idea without some help.
-* Help comes in a few slides.
+* A bad idea when there are untrusted clients.
 
 
 
@@ -323,7 +341,7 @@
 ## Sneak through regex `node` definitions.
 
 	[agent]
-		certname=foobarbaz.www.example.com
+		certname=foo.www.example.com
 
 
 
@@ -405,7 +423,7 @@
 
 # Public and private interfaces
 
-* FIXME
+* Understand who can contact your<br />Puppet master.
 * Aside: on at least AWS and Rackspace, bandwidth over private interfaces is free.
 
 
@@ -414,6 +432,7 @@
 
 # `iptables`
 
+	@@@ sh
 	iptables -P INPUT ACCEPT
 	iptables -P OUTPUT ACCEPT
 	iptables -P FORWARD ACCEPT
@@ -446,6 +465,7 @@
 
 # `stunnel` Upstart config
 
+	@@@ sh
 	description	"stunnel-redis-client"
 	start on runlevel [2345]
 	stop on runlevel [!2345]
@@ -532,8 +552,16 @@ file { "/foo/bar/baz":
 # Input
 
 * Hostname...
-* ...which maps to a YAML file full of facts.
+* ...which maps to facts.
 
+<br />
+<br />
+<pre>
+/usr/local/bin/classifier foo.example.com
+
+# Facts are available as YAML in
+# $vardir/yaml/facts/foo.example.com.yaml
+</pre>
 
 
 !SLIDE bullets
@@ -542,16 +570,15 @@ file { "/foo/bar/baz":
 
 ## Key value pairs describing<br />the server in question.
 
-<pre>
---- !ruby/object:Puppet::Node::Facts
-  expiration: 2010-09-20 20:27:14.445807
-  name: &id003 hooah.example.com
-  values:
-    hardwaremodel: &id002 x86_64
-    kernelrelease: 2.6.35.1-rscloud
-    selinux: "false"
-    sshrsakey: OH HAI
-</pre>
+	@@@ yaml
+	--- !ruby/object:Puppet::Node::Facts
+	  expiration: 2010-09-20 20:27:14.445807
+	  name: &amp;id003 foo.example.com
+	  values:
+	    hardwaremodel: &amp;id002 x86_64
+	    kernelrelease: 2.6.35.1-rscloud
+	    selinux: "false"
+	    sshrsakey: OH HAI
 
 * Lots more: `facter | less`
 
@@ -561,17 +588,16 @@ file { "/foo/bar/baz":
 
 # Output
 
-* Classes, variables.  No resources.  YAML.
+	@@@ yaml
+	---
+	classes:
+	  - base
+	  - www
+	environment: production
+	parameters:
+	  mail_server: mail.example.com
 
-<pre>
----
-classes:
-  - base
-  - www
-environment: production
-parameters:
-  mail_server: mail.example.com
-</pre>
+* Classes, variables.  No resources.  YAML.
 
 
 
@@ -579,20 +605,19 @@ parameters:
 
 # Example external node classifier
 
-<pre>
-#!/bin/sh
-set -e
-TMPNAME=$(mktemp "$1.XXXXXXXXXX")
-ssh-keygen -q -f "$TMPNAME" -b 2048 -N ""
-zomg_post_to_the_api "$1" "$(cat "$TMPNAME.pub")"
-cat &lt;&lt;EOF
----
-classes:
-  - ssh
-parameters:
-  public_key: "$(cat "$TMPNAME.pub")"
-EOF
-</pre>
+	@@@ sh
+	#!/bin/sh
+	set -e
+	TMP=$(mktemp -d "$1.XXXXXXXXXX")
+	ssh-keygen -q -f "$TMP/id_rsa" -b 2048 -N ""
+	zomg_post_to_the_api "$1" "$(cat "$TMP/id_rsa.pub")"
+	cat <<EOF
+	---
+	classes:
+	  - ssh
+	parameters:
+	  public_key: $(cat "$TMP/id_rsa.pub")
+	EOF
 
 
 
@@ -643,14 +668,16 @@ EOF
 
 # Plugin file structure
 
-	modules/ssh/
-		manifests/
-			init.pp
-		lib/puppet/
-			type/
-				keygen.rb
-			provider/keygen/
-				posix.rb
+<pre>
+modules/ssh/
+	manifests/
+		<strong>init.pp</strong>
+	lib/puppet/
+		type/
+			<strong>keygen.rb</strong>
+		provider/keygen/
+			<strong>posix.rb</strong>
+</pre>
 
 
 
@@ -677,6 +704,7 @@ EOF
 
 # Type
 
+	@@@ ruby
 	require 'puppet/type'
 	Puppet::Type.newtype(:users) do
 	  @doc = "ssh-keygen example"
@@ -695,26 +723,26 @@ EOF
 
 # Provider
 
-require 'openssl'
-require 'puppet/resource'
-require 'puppet/resource/catalog'
+	@@@ ruby
+	require 'openssl'
+	require 'puppet/resource'
+	require 'puppet/resource/catalog'
 
-<pre>
-Puppet::Type.type(:keygen).
-  provide(:posix) do
+	Puppet::Type.type(:keygen).
+	  provide(:posix) do
 
-  desc "ssh-keygen example for POSIX"
-  defaultfor :operatingsystem => :debian
+	  desc "ssh-keygen example for POSIX"
+	  defaultfor :operatingsystem => :debian
 
-  <strong># Define exists?, create, and destroy.</strong>
+	  # Define exists?, create, and destroy.
 
-end
-</pre>
+	end
 
 
 
 !SLIDE bullets
 
+	@@@ ruby
 	  def exists?
 	    File.exists?(
 	      "/root/.ssh/authorized_keys")
@@ -729,6 +757,7 @@ end
 
 !SLIDE bullets
 
+	@@@ ruby
 	  def create
 	    key = OpenSSL::PKey::RSA.generate(2048)
 	    zomg_post_to_the_api \
@@ -778,18 +807,17 @@ end
 
 # `config.ru`
 
-<pre>
-$0 = "master"
-ARGV << "--rack"
-ARGV << "--certname=#{
-  File.read("/etc/puppet/certname").chomp}"
+	@@@ ruby
+	$0 = "master"
+	ARGV << "--rack"
+	ARGV << "--certname=#{
+	  File.read("/etc/puppet/certname").chomp}"
 
-require 'puppet/application/master'
+	require 'puppet/application/master'
 
-<strong># TODO Middleware.</strong>
+	# TODO Middleware.
 
-run Puppet::Application[:master].run
-</pre>
+	run Puppet::Application[:master].run
 
 
 
@@ -797,30 +825,29 @@ run Puppet::Application[:master].run
 
 # No-op middleware
 
-<pre>
-require 'base64'
-require 'json'
-require 'rack/utils'
-require 'yaml'
-require 'zlib'
+	@@@ ruby
+	require 'base64'
+	require 'json'
+	require 'rack/utils'
+	require 'yaml'
+	require 'zlib'
 
-class Hooah
+	class StuckInTheMiddleWithYou
 
-  def initialize(app)
-    @app = app
-  end
+	  def initialize(app)
+	    @app = app
+	  end
 
-  def call(env)
-	<strong># TODO Preprocessing.</strong>
-    status, headers, body = @app.call(env)
-	<strong># TODO Postprocessing.</strong>
-    [status, headers, body]
-  end
+	  def call(env)
+		# TODO Preprocessing.
+	    status, headers, body = @app.call(env)
+		# TODO Postprocessing.
+	    [status, headers, body]
+	  end
 
-end
+	end
 
-use Hooah
-</pre>
+	use StuckInTheMiddleWithYou
 
 
 
@@ -828,25 +855,24 @@ use Hooah
 
 # Preprocessing
 
-<pre>
-    params = Rack::Utils.parse_query(env["QUERY_STRING"], "&")
-    facts = case params["facts_format"]
-    when "b64_zlib_yaml"
-      YAML.load(Zlib::Inflate.inflate(Base64.decode64(
-        Rack::Utils.unescape(params["facts"]))))
-    end
+	@@@ ruby
+	    params = Rack::Utils.parse_query(env["QUERY_STRING"], "&")
+	    facts = case params["facts_format"]
+	    when "b64_zlib_yaml"
+	      YAML.load(Zlib::Inflate.inflate(Base64.decode64(
+	        Rack::Utils.unescape(params["facts"]))))
+	    end
 
-    <strong># TODO Change facts.</strong>
+	    # TODO Change facts.
 
-    params["facts"] = case params["facts_format"]
-    when "b64_zlib_yaml"
-      Rack::Utils.escape(Base64.encode64(Zlib::Deflate.deflate(
-        YAML.dump(facts), Zlib::BEST_COMPRESSION)))
-    end if facts
-    env["QUERY_STRING"] = Rack::Utils.build_query(params)
-    env["REQUEST_URI"] =
-      "#{env["PATH_INFO"]}?#{env["QUERY_STRING"]}"
-</pre>
+	    params["facts"] = case params["facts_format"]
+	    when "b64_zlib_yaml"
+	      Rack::Utils.escape(Base64.encode64(Zlib::Deflate.deflate(
+	        YAML.dump(facts), Zlib::BEST_COMPRESSION)))
+	    end if facts
+	    env["QUERY_STRING"] = Rack::Utils.build_query(params)
+	    env["REQUEST_URI"] =
+	      "#{env["PATH_INFO"]}?#{env["QUERY_STRING"]}"
 
 
 
@@ -854,24 +880,23 @@ use Hooah
 
 # Postprocessing
 
-<pre>
-    object = case headers["Content-Type"]
-    when /[\/-]pson$/ then JSON.parse(body.body.join)
-    when /[\/-]yaml$/ then YAML.load(body.body.join)
-    when "text/marshal" then Marshal.load(body.body.join)
-    else body.body.join
-    end
+	@@@ ruby
+	    object = case headers["Content-Type"]
+	    when /[\/-]pson$/ then JSON.parse(body.body.join)
+	    when /[\/-]yaml$/ then YAML.load(body.body.join)
+	    when "text/marshal" then Marshal.load(body.body.join)
+	    else body.body.join
+	    end
 
-    <strong># TODO Change catalog.</strong>
+	    # TODO Change catalog.
 
-    body = case headers["Content-Type"]
-    when /[\/-]pson$/ then [JSON.generate(object)]
-    when /[\/-]yaml$/ then [YAML.dump(object)]
-    when "text/marshal" then [Marshal.dump(object)]
-    else [object]
-    end
-	headers["Content-Length"] = Rack::Utils.bytesize(body.first)
-</pre>
+	    body = case headers["Content-Type"]
+	    when /[\/-]pson$/ then [JSON.generate(object)]
+	    when /[\/-]yaml$/ then [YAML.dump(object)]
+	    when "text/marshal" then [Marshal.dump(object)]
+	    else [object]
+	    end
+		headers["Content-Length"] = Rack::Utils.bytesize(body.first)
 
 
 
@@ -881,7 +906,7 @@ use Hooah
 # Rack middleware
 
 * Drink responsibly.
-* FIXME Gist
+* <http://gist.github.com/602922>
 
 
 
@@ -891,18 +916,3 @@ use Hooah
 
 * <richard@devstructure.com> or [@rcrowley](http://twitter.com/rcrowley)
 * P.S. use DevStructure.
-
-
-
-!SLIDE bullets
-
-# Self quotes
-
-* DevOps is the scalable practice of engineering.
-* Version control is not a form of government.
-
-# NOTES
-
-* Break things down into 80/20 rules.
-* Go back at the end and fix quotes to look pretty.
-* Note when Puppet and Chef are similar and that the only significant difference is in dependency resolution.
