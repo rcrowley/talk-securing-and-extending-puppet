@@ -39,6 +39,22 @@
 
 
 !SLIDE bullets
+
+# Why manage configuration?
+
+
+
+!SLIDE bullets
+.notes Talk about choosing the right tool for the right job.  For example, scripting `./configure && make && make install` in Puppet is a good sign you should build a package.
+
+# An interlude on<br />package management
+
+* Configuration management is the<br />centralized authority<br />to a package manager&#8217;s<br />local authority.
+* (This is my usual answer to<br />&#8220;why do I need this?&#8221;)
+
+
+
+!SLIDE bullets
 .notes `~/bin/doit5` may never work again.  It's a good thing that the Puppet language is not itself Ruby but I'm not here to start a holy war.  Limits in configuration management serve the same purpose as in a templating language: they enforce separation of concerns.  In this case, the limits separate process from desired state.
 
 # Puppet, Chef,<br />and `~/bin/doit5`
@@ -101,6 +117,12 @@
 
 
 !SLIDE bullets
+
+# A basic configuration<br />for Puppet itself
+
+
+
+!SLIDE bullets
 .notes The defaults are good except for a few places that break filesystem standards, which I choose to fix.  `pluginsync` will be important later.  You can customize the master and agents separately using `[master]` and `[agent]` sections, INI-style.
 
 # `/etc/puppet/puppet.conf`
@@ -111,15 +133,6 @@
 		ssldir=$vardir/ssl
 		pluginsync=true
 		server=puppetmaster.example.com
-
-
-
-!SLIDE bullets
-
-# (R)TFM
-
-* `puppet --genconfig`
-* <http://bit.ly/puppet-config-ref>
 
 
 
@@ -136,6 +149,16 @@
 		puppet agent --certname=$(cat
 		/etc/puppet/certname)
 		--no-daemonize --onetime'
+
+
+
+!SLIDE bullets
+
+# (R)TFM
+
+* `puppet --genconfig`
+* <http://bit.ly/puppet-config-ref>
+
 
 
 !SLIDE bullets
@@ -215,16 +238,6 @@
 
 
 !SLIDE bullets
-.notes Talk about choosing the right tool for the right job.  For example, scripting `./configure && make && make install` in Puppet is a good sign you should build a package.
-
-# An interlude on<br />package management
-
-* Configuration management is the<br />centralized authority<br />to a package manager&#8217;s<br />local authority.
-* (This is my usual answer to<br />&#8220;why do I need this?&#8221;)
-
-
-
-!SLIDE bullets
 
 # Security
 
@@ -263,6 +276,12 @@
 * `/var/lib/puppet/ssl` on agents.
 * `puppet cert` on master.
 * <http://bit.ly/puppet-security-ref>
+
+
+
+!SLIDE bullets
+
+# A tour of secondary Puppet config files
 
 
 
@@ -479,6 +498,12 @@
 	stop on runlevel [!2345]
 	respawn
 	exec /usr/bin/stunnel -f -d 6381 -r localhost:6382
+
+
+
+!SLIDE bullets
+
+# Special cases<br />aren&#8217;t that special
 
 
 
