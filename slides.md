@@ -725,7 +725,7 @@ modules/ssh/
 	lib/puppet/
 		type/
 			<strong>keygen.rb</strong>
-		provider/keygen/
+		provider/<strong>keygen</strong>/
 			<strong>posix.rb</strong>
 </pre>
 
@@ -756,7 +756,7 @@ modules/ssh/
 
 	@@@ ruby
 	require 'puppet/type'
-	Puppet::Type.newtype(:users) do
+	Puppet::Type.newtype(:keygen) do
 	  @doc = "ssh-keygen example"
 	  newparam(:whatever, :namevar => true) do
 	    desc "Name it whatever."
