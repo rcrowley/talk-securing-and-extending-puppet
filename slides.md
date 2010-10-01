@@ -198,9 +198,8 @@
 ## `modules/www/manifests/init.pp`
 
 	class www {
-		package {
-			"nginx":
-				ensure => "0.7.65-1ubuntu2";
+		package { "nginx":
+			ensure => "0.7.65-1ubuntu2",
 		}
 	}
 
@@ -512,7 +511,7 @@ file { "/foo/bar/baz":
 
 # Extending puppet
 
-## Where does your code run?
+# Where does<br />your code run?
 
 * External node classifier runs on master.
 * Plugins run on agents.
