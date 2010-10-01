@@ -271,7 +271,7 @@
 # `autosign.conf`
 
 	foo.example.com
-	*.bar.example.com
+	*.www.example.com
 	*
 
 * A bad idea when there are untrusted clients.
