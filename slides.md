@@ -599,9 +599,9 @@ file { "/foo/bar/baz":
 	@@@ yaml
 	--- !ruby/object:Puppet::Node::Facts
 	  expiration: 2010-09-20 20:27:14.445807
-	  name: &amp;id003 foo.example.com
+	  name: &id003 foo.example.com
 	  values:
-	    hardwaremodel: &amp;id002 x86_64
+	    hardwaremodel: &id002 x86_64
 	    kernelrelease: 2.6.35.1-rscloud
 	    selinux: "false"
 	    sshrsakey: OH HAI
@@ -636,7 +636,7 @@ file { "/foo/bar/baz":
 	set -e
 	TMP=$(mktemp -d "$1.XXXXXXXXXX")
 	ssh-keygen -q -f "$TMP/id_rsa" -b 2048 -N ""
-	zomg_post_to_the_api "$1" "$(cat "$TMP/id_rsa.pub")"
+	zomg_post_to_the_api "$1" "$(cat "$TMP/id_rsa")"
 	cat <<EOF
 	---
 	classes:
@@ -787,7 +787,7 @@ modules/ssh/
 	  def create
 	    key = OpenSSL::PKey::RSA.generate(2048)
 	    zomg_post_to_the_api \
-	      Facter.value(:ipaddress), key
+	      Facter.value(:certname), key
 	    catalog = Puppet::Resource::Catalog.new
 	    catalog.create_resource(:file,
 	      :path => "/root/.ssh",
@@ -806,7 +806,7 @@ modules/ssh/
 
 !SLIDE bullets
 
-# Which is right - easy or orderly?
+# Which is right?<br />Easy or orderly?
 
 * That&#8217;s an exercise for the reader.
 
@@ -941,4 +941,5 @@ modules/ssh/
 # Thank you
 
 * <richard@devstructure.com> or [@rcrowley](http://twitter.com/rcrowley)
+* <http://rcrowley.org/talks/puppet-camp-2010>
 * P.S. use DevStructure.
