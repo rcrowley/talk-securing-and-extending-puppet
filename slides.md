@@ -623,7 +623,6 @@ file { "/foo/bar/baz":
 
 ## Key value pairs describing<br />the server in question.
 
-	@@@ yaml
 	--- !ruby/object:Puppet::Node::Facts
 	  expiration: 2010-09-20 20:27:14.445807
 	  name: &id003 foo.example.com
@@ -641,7 +640,6 @@ file { "/foo/bar/baz":
 
 # Output
 
-	@@@ yaml
 	---
 	classes:
 	  - base
