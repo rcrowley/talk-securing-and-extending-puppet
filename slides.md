@@ -509,7 +509,34 @@ file { "/foo/bar/baz":
 
 !SLIDE bullets
 
-# Extending puppet
+# Extending Puppet
+
+
+
+!SLIDE bullets
+
+# Maybe don&#8217;t
+
+	$extlookup_datadir = "/etc/puppet/extdata"
+	$extlookup_precedence = [
+		"%{fqdn}", "%{domain}", "base"]
+
+	file { "/foo/bar/baz":
+		content => extlookup("foobarbaz"),
+		ensure  => file,
+	}
+
+* `extlookup` function can retrieve data from external CSV files.
+
+
+
+!SLIDE bullets
+
+# Then again, maybe<br />extend Puppet
+
+
+
+!SLIDE bullets
 
 # Where does<br />your code run?
 
