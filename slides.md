@@ -441,8 +441,10 @@
 	iptables -A INPUT -m conntrack \
 		--ctstate RELATED,ESTABLISHED -j ACCEPT
 
-	iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
-	iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+	iptables -A INPUT -i eth1 -p tcp \
+		-s 10.47.0.0/16 --dport 8140 -j ACCEPT
+	iptables -A INPUT -i eth1 -p udp \
+		-s 10.47.0.0/16 --dport 8140 -j ACCEPT
 
 	iptables -A INPUT -i lo -j ACCEPT
 
