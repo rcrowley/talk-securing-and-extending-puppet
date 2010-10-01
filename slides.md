@@ -50,7 +50,6 @@
 # An interlude on<br />package management
 
 * Configuration management is the<br />centralized authority<br />to a package manager&#8217;s<br />local authority.
-* (This is my usual answer to<br />&#8220;why do I need this?&#8221;)
 
 
 
