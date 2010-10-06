@@ -965,5 +965,5 @@ modules/ssh/
 # Thank you
 
 * <richard@devstructure.com> or [@rcrowley](http://twitter.com/rcrowley)
-* <http://rcrowley.org/talks/strangeloop-2010>
+* <http://rcrowley.org/talks/puppet-camp-2010>
 * P.S. use DevStructure.

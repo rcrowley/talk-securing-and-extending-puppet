@@ -1,4 +1,4 @@
-set :remote, "/home/rcrowley/work/strangeloop-2010"
+set :remote, "/home/rcrowley/work/puppet-camp-2010"
 
 role :www, "rcrowley.org"
 
