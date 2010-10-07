@@ -8,8 +8,9 @@ end
 
 task :deploy do
   static
-  upload "static", remote, :via => :scp, :recursive => true
+  run "rm -rf #{remote}"
+  upload "static", remote
   Dir["*.css", "*.js"].each do |filename|
-    upload filename, "#{remote}/#{filename}", :via => :scp
+    upload filename, "#{remote}/#{filename}"
   end
 end
