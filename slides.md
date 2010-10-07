@@ -913,7 +913,10 @@ modules/ssh/
 	        Rack::Utils.unescape(params["facts"]))))
 	    end
 
-	    # TODO Change facts.
+	    # Change facts.
+	    if Puppet::Node::Facts === facts
+	      facts.values["foo"] = "bar"
+	    end
 
 	    params["facts"] = case params["facts_format"]
 	    when "b64_zlib_yaml"
@@ -938,7 +941,15 @@ modules/ssh/
 	    else body.body.join
 	    end
 
-	    # TODO Change catalog.
+	    # Change catalog.
+	    if Hash === object && "Catalog" == object["document_type"]
+	      object["data"]["resources"].unshift({
+	        "exported" => false,
+	        "title" => "apt-get update",
+	        "parameters" => {"path"=>"/usr/sbin:/usr/bin:/sbin:/bin"},
+	        "type" => "Exec",
+	      })
+	    end
 
 	    body = case headers["Content-Type"]
 	    when /[\/-]pson$/ then [JSON.generate(object)]
