@@ -22,7 +22,7 @@
 !SLIDE bullets
 .notes Your infrastructure is never an immutable black box.  It is one step in a long iteration.
 
-# Infrastructure as code
+# Infrastructure is code
 
 * You can reason about code in ways you can&#8217;t about a tarball or AMI.
 
